@@ -14,9 +14,11 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -25,6 +27,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -32,6 +36,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,6 +54,9 @@ public class Controller implements Initializable {
     public TextArea calculationHistoryOutput;
     public TextArea eventLog;
     public MenuItem helpMenuItem;
+    public TabPane rightSection;
+    public TextArea calculationHistoryOutputSide;
+    public TextArea eventLogSide;
 
     public static final String HELP_URL = "https://cloud.markokroselj.com/uv/dn2/help.pdf";
     private static final boolean LOGGING_ENABLED = true;
@@ -174,6 +182,34 @@ public class Controller implements Initializable {
             setStatusBarLabeContent("Odpiranje pomoči...");
             openWebsite(HELP_URL);
         });
+
+        Platform.runLater(() -> {
+            Stage stage = (Stage) calculatorDisplay.getScene().getWindow();
+            float widthPercent = 0.25f;
+            float minStageWidth = 685;
+            rightSection.setMinWidth(300);
+            rightSection.setPrefWidth(stage.getWidth() * widthPercent);
+            rightSection.setVisible(stage.getWidth() > minStageWidth);
+            rightSection.setManaged(stage.getWidth() > minStageWidth);
+
+            stage.widthProperty().addListener(((observable, oldValue, newValue) -> {
+                rightSection.setMinWidth(300);
+                rightSection.setPrefWidth(stage.getWidth() * widthPercent);
+                rightSection.setVisible(newValue.intValue() > minStageWidth);
+                rightSection.setManaged(newValue.intValue() > minStageWidth);
+            }
+
+            ));
+
+        });
+
+        javaIcon.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                if (mouseEvent.getClickCount() == 7) {
+                    openWebsite("https://www.java.com/");
+                }
+            }
+        });
     }
 
     public void toolBarButtonsMouseEntered(MouseEvent mouseEvent) {
@@ -268,9 +304,11 @@ public class Controller implements Initializable {
             return;
         }
 
+        String pi = String.valueOf(new BigDecimal(Math.PI).setScale(7, RoundingMode.HALF_UP));
+        String e = String.valueOf(new BigDecimal(Math.E).setScale(7, RoundingMode.HALF_UP));
 
         if (calculatorDisplayContent.strip().equals("π")) {
-            calculatorDisplay.setText(String.valueOf(Math.PI));
+            calculatorDisplay.setText(pi);
             addToCalculationHistory(calculatorDisplayContent);
             setStatusBarLabeContent("Uspešen izračun!");
             resetBooleans();
@@ -279,8 +317,9 @@ public class Controller implements Initializable {
             return;
 
         }
+
         if (calculatorDisplayContent.strip().equals("e")) {
-            calculatorDisplay.setText(String.valueOf(Math.E));
+            calculatorDisplay.setText(e);
             addToCalculationHistory(calculatorDisplayContent);
             setStatusBarLabeContent("Uspešen izračun!");
             resetBooleans();
@@ -332,11 +371,12 @@ public class Controller implements Initializable {
         ScriptEngine engine = manager.getEngineByName("js");
         try {
 
-            result = engine.eval(calculatorDisplayContent.replace("x", "*").replace("π", String.valueOf(Math.PI)).replace("e", String.valueOf(Math.E)));
+            result = engine.eval(calculatorDisplayContent.replace("x", "*").replace("π", pi)
+                    .replace("e", e));
             addToCalculationHistory(calculatorDisplayContent);
 
-        } catch (ScriptException e) {
-            setStatusBarLabeContent("Ne veljaven vnos!\n" + e);
+        } catch (ScriptException scriptException) {
+            setStatusBarLabeContent("Ne veljaven vnos!\n" + scriptException);
             resetBooleans();
             return;
         }
@@ -393,6 +433,7 @@ public class Controller implements Initializable {
         resetBooleans();
         calculatorDisplay.clear();
         calculationHistoryOutput.clear();
+        calculationHistoryOutputSide.clear();
         setStatusBarLabeContent("Vsebina zaslona kalkulatorja in dnevnika izračunov pobrisana!");
     }
 
@@ -463,6 +504,7 @@ public class Controller implements Initializable {
     }
 
     public void addToCalculationHistory(String calculation) {
+        calculationHistoryOutputSide.appendText(calculation + "\n");
         calculationHistoryOutput.appendText(calculation + "\n");
     }
 
@@ -499,8 +541,10 @@ public class Controller implements Initializable {
     public void setStatusBarLabeContent(String content) {
         statusBarLabeContent = content;
         statusBarLabel.setText(statusBarLabeContent);
-        if (LOGGING_ENABLED)
+        if (LOGGING_ENABLED) {
             eventLog.appendText(statusBarLabeContent + "\t" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("d.MM.yyyy HH:mm:ss")) + "\n");
+            eventLogSide.appendText(statusBarLabeContent + "\t" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("d.MM.yyyy HH:mm:ss")) + "\n");
+        }
 
     }
 
@@ -534,11 +578,14 @@ public class Controller implements Initializable {
                     return;
                 }
                 calculationHistoryOutput.clear();
+                calculationHistoryOutputSide.clear();
                 while (scanner.hasNextLine()) {
-                    calculationHistoryOutput.appendText(scanner.nextLine() + "\n");
+                    String line = scanner.nextLine() + "\n";
+                    calculationHistoryOutput.appendText(line);
+                    calculationHistoryOutputSide.appendText(line);
                 }
                 setStatusBarLabeContent("Zgodovina računskih operacij uspešno prebrana!\n" + file.getName() + " " + file.length() + "b");
-                if (!accordion.getExpandedPane().equals(calcHistoryPane))
+                if (!accordion.getExpandedPane().equals(calcHistoryPane) && !isSidePaneVisible())
                     accordion.setExpandedPane(calcHistoryPane);
             } catch (IOException e) {
                 setStatusBarLabeContent("Napaka pri branju zgodovine računskih operacij!");
@@ -553,6 +600,10 @@ public class Controller implements Initializable {
         } catch (URISyntaxException | IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public boolean isSidePaneVisible() {
+        return rightSection.isVisible() && rightSection.isManaged();
     }
 }
 

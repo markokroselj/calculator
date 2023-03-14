@@ -21,6 +21,8 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.RowConstraints?>
 
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.Tab?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="585" minWidth="400" prefHeight="585.0" prefWidth="400"
             xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/11.0.1"
             fx:controller="com.markokroselj.uv_dn2.Controller">
@@ -195,16 +197,30 @@
                             </BorderPane>
                         </TitledPane>
                         <TitledPane fx:id="calcHistoryPane" text="Zgodovina izračunov">
-                            <TextArea fx:id="calculationHistoryOutput" editable="false"
-                                      maxWidth="1.7976931348623157E308"/>
+                            <TextArea fx:id="calculationHistoryOutput" editable="false"/>
                         </TitledPane>
                         <TitledPane text="Dnevnik dogodkov">
-                            <TextArea fx:id="eventLog" editable="false" maxHeight="1.7976931348623157E308"
-                                      maxWidth="1.7976931348623157E308"/>
+                            <TextArea fx:id="eventLog" editable="false"/>
                         </TitledPane>
                     </panes>
                 </Accordion>
             </center>
+            <right>
+                <TabPane visible="false" managed="false" fx:id="rightSection">
+                    <tabs>
+                        <Tab closable="false" text="Zgodovina izračunov">
+                            <content>
+                                <TextArea fx:id="calculationHistoryOutputSide" editable="false"/>
+                            </content>
+                        </Tab>
+                        <Tab closable="false" text="Dnevnik dogodkov">
+                            <content>
+                                <TextArea fx:id="eventLogSide" editable="false"/>
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </right>
         </BorderPane>
     </center>
     <bottom>

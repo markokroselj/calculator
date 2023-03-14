@@ -198,3 +198,29 @@
 .scroll-bar:horizontal, .scroll-bar:vertical {
     -fx-background-color: #181818;
 }
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-opacity: 0;
+}
+
+.tab-pane .tab {
+    -fx-background-color: null;
+
+}
+
+.tab-pane:focused > .tab-header-area > .headers-region > .tab:selected {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.tab-pane .tab:selected {
+    -fx-border-color: transparent transparent #414141 transparent;
+}
+
+.tab .tab-label {
+    -fx-text-fill: #828282;
+}
+
+.tab:selected .tab-label {
+    -fx-text-fill: #fff;
+}
