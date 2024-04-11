@@ -2,7 +2,7 @@
 
 Calculator desktop app made in JavaFx, that I created for my User Interfaces class at uni. General look and feel resembles the default calculator app for Windows 10.
 
-![Calculator app screenshot](https://gitlab.cloud.markokroselj.com/markokroselj/kalkulator/-/raw/main/screen_capture.png)
+![Calculator app screenshot](https://raw.githubusercontent.com/markokroselj/calculator/main/screen_capture.png)
 
 
 ## Features
